@@ -1,11 +1,13 @@
 package game2048;
 
+import org.hamcrest.Factory;
+
 import java.util.Formatter;
 import java.util.Observable;
 
 
 /** The state of a game of 2048.
- *  @author TODO: YOUR NAME HERE
+ *  @author Rigel-Alpha
  */
 public class Model extends Observable {
     /** Current contents of the board. */
@@ -107,12 +109,98 @@ public class Model extends Observable {
      *    and the trailing tile does not.
      * */
     public boolean tilt(Side side) {
-        boolean changed;
-        changed = false;
+        boolean changed = false;
 
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        int length = board.size();
+        if (side == Side.EAST)
+        {
+            for(int r = 0; r < length; r++)
+            {
+                for (int c = length - 1; c > 0; c--)
+                {
+                    Tile curr_tile = board.tile(c, r);
+                    if (curr_tile != null)
+                    {
+                        for (int i = 1; i <= c; i++)
+                        {
+                            Tile other_tile = board.tile(c - i, r);
+                            if (other_tile == null)
+                            {
+                                continue;
+                            }
+                            if (other_tile.value() == curr_tile.value())
+                                {
+                                    board.move(c, r, other_tile);
+                                    changed = true;
+                                    score += curr_tile.value() * 2;
+                                    break;
+                                }
+                            else
+                            {
+                                if (i == 1)
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    board.move(c - 1, r, other_tile);
+                                    changed = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (curr_tile == null)
+                    {
+                        int move_count = 0;
+                        int remember_other_value = 0;
+                        for (int i = 1; i <= c; i++)
+                        {
+                            Tile other_tile = board.tile(c - i, r);
+                            if (other_tile == null)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                if (move_count == 1 && remember_other_value != other_tile.value())
+                                {
+                                    break;
+                                }
+                                board.move(c, r, other_tile);
+                                changed = true;
+                                move_count += 1;
+                                remember_other_value = other_tile.value();
+                                if (move_count == 2)
+                                {
+                                    score += remember_other_value * 2;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }else if (side == Side.NORTH)
+        {
+            board.setViewingPerspective(Side.WEST);
+            changed = tilt(Side.EAST);
+            board.setViewingPerspective(Side.NORTH);
+        }else if (side == Side.WEST)
+        {
+            board.setViewingPerspective(Side.SOUTH);
+            changed = tilt(Side.EAST);
+            board.setViewingPerspective(Side.NORTH);
+        }else if (side == Side.SOUTH)
+        {
+            board.setViewingPerspective(Side.EAST);
+            changed = tilt(Side.EAST);
+            board.setViewingPerspective(Side.NORTH);
+        }
+
 
         checkGameOver();
         if (changed) {
@@ -137,7 +225,17 @@ public class Model extends Observable {
      *  Empty spaces are stored as null.
      * */
     public static boolean emptySpaceExists(Board b) {
-        // TODO: Fill in this function.
+        int length = b.size();
+        for (int row = 0; row < length; row++)
+        {
+            for (int column = 0; column < length; column++)
+            {
+                if (b.tile(row, column) == null)
+                {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -147,7 +245,21 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        int length = b.size();
+        for (int row = 0; row < length; row++)
+        {
+            for (int column = 0; column < length; column++)
+            {
+                if (b.tile(row, column) == null)
+                {
+                    continue;
+                }
+                else if (b.tile(row, column).value() == MAX_PIECE)
+                {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -158,7 +270,52 @@ public class Model extends Observable {
      * 2. There are two adjacent tiles with the same value.
      */
     public static boolean atLeastOneMoveExists(Board b) {
-        // TODO: Fill in this function.
+        if (emptySpaceExists(b))
+        {
+            return true;
+        }
+        else
+        {
+            int length = b.size();
+            for(int row = 0; row < length; row++)
+            {
+                for (int column = 0;column < length; column++)
+                {
+                    int value = b.tile(row, column).value();
+                    if (column != length - 1)
+                    {
+                        int right_value = b.tile(row, column + 1).value();
+                        if (row != length -1)
+                        {
+                            int up_value = b.tile(row + 1, column).value();
+                            if (value == up_value || value == right_value)
+                            {
+                                return true;
+                            }
+                        }
+                        else if (value == right_value)
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {
+                        if (row != length - 1)
+                        {
+                            int up_value = b.tile(row + 1, column).value();
+                            if (value == up_value)
+                            {
+                                return true;
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
         return false;
     }
 
