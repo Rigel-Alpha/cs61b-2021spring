@@ -26,7 +26,7 @@ public class TimeAList {
         AList times = new AList();
         AList opCounts = new AList();
         int N0 = 1000;
-        while (N0 <= 12800){
+        while (N0 <= 80000){
             Ns.addLast(N0);
             Stopwatch sw = new Stopwatch();
             AList test = new AList();
